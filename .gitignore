@@ -43,3 +43,6 @@ target/
 *.env.local
 *.secret
 *.settings
+.ruby-version
+tmp/cache/*
+log/development.log
