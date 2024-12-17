@@ -1,23 +1,43 @@
 class Cart < ApplicationRecord
-  scope :inactive_for, lambda { |hours_ago| where('updated_at > ?', hours_ago)  }
-  scope :abandoned_for, lambda { |days_ago| where(status: :abandoned).where('updated_at < ?', days_ago) }
+  ABANDONED_HOUR_LIMIT = 3.hours
+  ABANDONED_DAY_LIMIT = 7.days
 
   has_many :cart_products, autosave: true, dependent: :destroy
   has_many :products, through: :cart_products
-
-  enum status: [:open, :abandoned]
 
   validates_numericality_of :total_price, greater_than_or_equal_to: 0
   validates_associated :cart_products
 
   after_touch :set_total_price
+  after_touch :update_last_interaction_at
+
+  def as_json(options = {})
+    super(options).except('created_at', 'updated_at', 'last_interaction_at', 'abandoned_at')
+                  .merge(products: products_and_quantities)
+  end
 
   def set_total_price
     update(total_price: calculate_total_value)
   end
 
-  def as_json(options = {})
-    super(options).merge(products: products_and_quantities)
+  def mark_as_abandoned
+    return update(abandoned_at: nil) unless abandoned_hour_limit_exceded
+
+    update(abandoned_at: Time.zone.now)
+  end
+
+  def remove_if_abandoned
+    return unless abandoned? && abandoned_day_limit_exceded
+
+    destroy
+  end
+
+  def abandoned?
+    abandoned_at.present?
+  end
+
+  def update_last_interaction_at
+    update(last_interaction_at: updated_at)
   end
 
   private
@@ -48,5 +68,13 @@ class Cart < ApplicationRecord
 
       [product_price.to_f * quantity.to_f]
     end
+  end
+
+  def abandoned_hour_limit_exceded
+    Time.zone.now - last_interaction_at > ABANDONED_HOUR_LIMIT
+  end
+
+  def abandoned_day_limit_exceded
+    abandoned? && abandoned_at - last_interaction_at > ABANDONED_DAY_LIMIT
   end
 end

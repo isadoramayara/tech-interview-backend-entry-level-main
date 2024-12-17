@@ -45,7 +45,7 @@ class CartsController < ApplicationController
   def set_cart
     return @cart = Cart.find(session[:cart_id]) if session[:cart_id].present?
 
-    @cart = Cart.create!(status: :open, total_price: 0.0)
+    @cart = Cart.create!
     session[:cart_id] = @cart.id
   end
 
