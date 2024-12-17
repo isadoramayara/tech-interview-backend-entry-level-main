@@ -4,10 +4,4 @@ class Product < ApplicationRecord
 
   validates_presence_of :name, :price
   validates_numericality_of :price, greater_than_or_equal_to: 0
-
-  def quantity(cart)
-    cart_product = cart_products.find_by(cart:)
-
-    cart_product.quantity
-  end
 end
