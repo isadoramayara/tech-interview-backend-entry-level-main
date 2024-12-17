@@ -1,21 +1,27 @@
 class CartsController < ApplicationController
+  rescue_from ActiveRecord::RecordInvalid, with: :handle_record_invalid
+  rescue_from ActiveRecord::RecordNotFound, with: :handle_record_invalid
+  rescue_from ActiveRecord::RecordNotDestroyed, with: :handle_record_invalid
+
   before_action :set_cart
+
+  def create
+    render json: @cart
+  end
 
   def show
     render json: @cart
   end
 
-  def update
+  def add_item
     product_id = cart_params[:product_id]
-    quantity = cart_params[:quantity]
+    quantity = cart_params[:quantity].to_f
 
     cart_product = @cart.cart_products.find_or_create_by(product_id:)
-    cart_product.quantity = quantity
+    cart_product.quantity += quantity
 
-    if cart_product.save
+    if cart_product.save!
       render json: @cart, status: :created
-    else
-      render json: @cart, include: @cart.errors, status: :unprocessable_entity
     end
   end
 
@@ -23,10 +29,10 @@ class CartsController < ApplicationController
     product_id = cart_params[:product_id]
     cart_product = @cart.cart_products.find_by(product_id:)
 
-    if cart_product.destroy
+    return handle_record_not_found if cart_product.nil?
+
+    if cart_product.destroy!
       render json: @cart, status: :ok
-    else
-      render json: { cart: @cart, errors: @cart.errors.full_messages }, status: :unprocessable_entity
     end
   end
 
@@ -41,5 +47,21 @@ class CartsController < ApplicationController
 
     @cart = Cart.create!(status: :open, total_price: 0.0)
     session[:cart_id] = @cart.id
+  end
+
+  def handle_record_not_found
+    render json: { error: 'Item not Found' }, status: :not_found
+  end
+
+  def handle_record_invalid(exception)
+    render json: {
+      error: 'Unprocessable Entity',
+      message: exception.message,
+      details: format_validation_errors(exception.record)
+    }, status: :unprocessable_entity
+  end
+
+  def format_validation_errors(record)
+    record.errors.full_messages.map { |msg| { error: msg } }
   end
 end
