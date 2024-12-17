@@ -11,14 +11,14 @@ class MarkCartAsAbandonedJob
   private
 
   def mark_carts_as_abandoned
-    Cart.inactive_for(3.hours.ago).find_each do |cart|
-      cart.update!(status: :abandoned)
+    Cart.inactive_for.find_each do |cart|
+      cart.mark_as_abandoned
     end
   end
 
   def delete_abandoned_carts
-    Cart.abandoned_for(7.days.ago).find_each do |cart|
-      cart.destroy!
+    Cart.abandoned_for.find_each do |cart|
+      cart.remove_if_abandoned
     end
   end
 end
