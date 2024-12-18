@@ -37,6 +37,7 @@ services:
           - POSTGRES_USER=postgres
           - POSTGRES_PASSWORD=password
           - REDIS_URL=redis://redis:6379/0
+          - DATABASE_URL=postgresql://postgres:password@db:5432/store_development
         depends_on:
             - db
             - redis
@@ -51,6 +52,7 @@ services:
         environment:
             - DATABASE_URL=postgresql://postgres:password@db:5432/store_test
             - REDIS_URL=redis://redis:6379/0
+            - RAILS_ENV=test
 volumes:
     postgres13:
     redis_data:
