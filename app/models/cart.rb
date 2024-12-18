@@ -38,11 +38,15 @@ class Cart < ApplicationRecord
     abandoned_at.present?
   end
 
+  private
+
+  def set_last_interaction_at
+    self.set_last_interaction_at = Time.zone.now
+  end
+
   def update_last_interaction_at
     update(last_interaction_at: updated_at)
   end
-
-  private
 
   def calculate_total_value
     return 0.0 if products.blank?
