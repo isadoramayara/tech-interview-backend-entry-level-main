@@ -18,13 +18,16 @@ class CartsController < ApplicationController
     quantity = cart_params[:quantity].to_f
 
     cart_product = @cart.cart_products.find_or_create_by(product_id:)
+
     cart_product.quantity += quantity
 
-    cart_product.destroy if cart_product.quantity <= 0
-
-    if @cart.save!
-      render json: @cart, status: :created
+    if cart_product.quantity > 0
+      cart_product.save!
+    else
+      cart_product.destroy!
     end
+
+    render json: @cart, status: :ok
   end
 
   def destroy
@@ -45,9 +48,9 @@ class CartsController < ApplicationController
   end
 
   def set_cart
-    return @cart = Cart.find(session[:cart_id]) if session[:cart_id].present?
+    cart_id = session[:cart_id] || nil
 
-    @cart = Cart.create!
+    @cart = Cart.find_or_create_by(id: cart_id)
     session[:cart_id] = @cart.id
   end
 
