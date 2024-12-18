@@ -11,13 +11,13 @@ class MarkCartAsAbandonedJob
   private
 
   def mark_carts_as_abandoned
-    Cart.inactive_for.find_each do |cart|
+    Cart.all.each do |cart|
       cart.mark_as_abandoned
     end
   end
 
   def delete_abandoned_carts
-    Cart.abandoned_for.find_each do |cart|
+    Cart.all.each do |cart|
       cart.remove_if_abandoned
     end
   end
