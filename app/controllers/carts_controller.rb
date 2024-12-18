@@ -20,7 +20,9 @@ class CartsController < ApplicationController
     cart_product = @cart.cart_products.find_or_create_by(product_id:)
     cart_product.quantity += quantity
 
-    if cart_product.save!
+    cart_product.destroy if cart_product.quantity <= 0
+
+    if @cart.save!
       render json: @cart, status: :created
     end
   end
@@ -57,7 +59,7 @@ class CartsController < ApplicationController
     render json: {
       error: 'Unprocessable Entity',
       message: exception.message,
-      details: format_validation_errors(exception.record)
+      details: format_validation_errors(exception.try(:record))
     }, status: :unprocessable_entity
   end
 

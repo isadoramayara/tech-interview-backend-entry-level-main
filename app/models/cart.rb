@@ -3,6 +3,8 @@ class Cart < ApplicationRecord
   ABANDONED_DAY_LIMIT = 7.days
 
   has_many :cart_products, autosave: true, dependent: :destroy
+  accepts_nested_attributes_for :cart_products
+
   has_many :products, through: :cart_products
 
   validates_numericality_of :total_price, greater_than_or_equal_to: 0
